@@ -1,0 +1,19 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override:
+    - docker info
+    - docker build --rm=false -t thejml/gtw:`echo $CIRCLE_SHA1|cut -b-12` .
+
+deployment:
+  hub:
+    branch: master
+    commands:
+      - echo $DOCKER_EMAIL " " $DOCKER_USER
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push thejml/gtw:`echo $CIRCLE_SHA1|cut -b-12`
+test:
+  override:
+    - docker run thejml/gtw:`echo $CIRCLE_SHA1|cut -b-12` /app/bin/gtw -test
