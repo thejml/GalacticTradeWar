@@ -5,15 +5,10 @@ $size=1000;
 $connections=3;
 
 // Autoloads:
-require 'vendor/autoload.php';
+require 'vendor/autoload.php'; // include Composer's autoloader
 
-use Elasticsearch\ClientBuilder;
-
-// Initialization
-$hosts = [
-    '192.168.1.199:9200',         // IP + Port
-];
-$esclient = ClientBuilder::create()->setHosts($hosts)->build();
+$client = new MongoDB\Client("mongodb://192.168.1.199:27017");
+$collection = $client->gtw->sectors;
 
 $galaxy=array();
 $debrisTypes=array();
@@ -86,15 +81,15 @@ for ($x=0; $x<$size; $x++) {
 
 for ($x=0; $x<$size; $x++) {
 	foreach ($galaxy[$x]['connections'] as $conn) {
-		$params = [
-    			'index' => 'galaxy',
-    			'type' => 'sectorlink',
+		$sectorConnection = [
     			'id' => $x,
     			'body' => $conn
 		];
 
-		$response = $esclient->index($params);
-		print_r($response);
+        $result = $collection->insertOne( $sectorConnection );
+
+        echo "Inserted with Object ID '{$result->getInsertedId()}'";
+
 	}
 	echo $x." => ".json_encode($galaxy[$x])."\n";
 }
