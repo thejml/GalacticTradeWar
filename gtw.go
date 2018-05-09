@@ -8,16 +8,33 @@ import (
 	"time"
 
 	"github.com/gliderlabs/ssh"
+	"github.com/globalsign/mgo"
 	"github.com/mgutz/ansi"
 	"golang.org/x/crypto/ssh/terminal"
+	"gopkg.in/mgo.v2/bson"
 )
 
-var (
-	DeadlineTimeout = 30 * time.Second
-	IdleTimeout     = 10 * time.Second
-)
+type SectorLinks struct {
+	SectorID int    `json:"sectorid"`
+	Link     string `json:"link"`
+}
+
+type SectorData struct {
+	SectorID int    `json:"sectorid"`
+	Planet   string `json:"planet"`
+	Starbase string `json:"starbase"`
+	Fighters int    `json:"fighters"`
+}
+
+var ()
 
 func main() {
+
+	const (
+		DATABASE   = "gtw"
+		COLLECTION = "sectors"
+	)
+
 	// Commandline Arguments:
 	// -port=8080 -host localhost:27017 -pass 12345 -user myUser -db trailDB
 	portPtr := flag.Int("port", 2222, "an int")
@@ -26,6 +43,7 @@ func main() {
 	//	mgoHostPtr := flag.String("host", "localhost:27017", "hostname:port")
 	//	dbPtr := flag.String("db", "thejml-trail", "Database to use")
 	testPtr := flag.Bool("test", false, "Validate Build")
+	IdleTimeout := 10 * time.Second
 
 	flag.Parse()
 
@@ -35,6 +53,20 @@ func main() {
 	//	db := fmt.Sprint(*dbPtr)
 	//	mgoHost := fmt.Sprint(*mgoHostPtr)
 	test := *testPtr
+
+	// Create an mgo client
+	session, err := mgo.Dial("192.168.1.199")
+
+	if err != nil {
+		// Handle error
+	}
+
+	c := session.DB(DATABASE).C(COLLECTION)
+
+	var sectors []SectorData
+	err = c.Find(bson.M{}).All(&sectors)
+
+	log.Println(sectors)
 
 	// Better info should be put here.
 	if test != false {
@@ -49,7 +81,7 @@ func main() {
 		sectorize := ansi.ColorFunc("red+h:black")
 		//		shipize     := ansi.ColorFunc("blue+h:black")
 
-		term := terminal.NewTerminal(s, sectorize("Sector 48")+phosphorize(" Move ship: Y/n?"))
+		term := terminal.NewTerminal(s, sectorize("Sector 48")+phosphorize(" Move ship: Y/n? "))
 		line, err := term.ReadLine()
 		if err == nil {
 			io.WriteString(s, "Hello "+line+"\n")
